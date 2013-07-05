@@ -1,7 +1,7 @@
-
 #include <IRremote.h>
-
 #include <IRremoteInt.h>
+#include <IRMilesTagDefines.h>
+#include <IRMilesTag.h>
 
 #define FIRE_ENABLED
 #define HIT_ENABLED
@@ -11,23 +11,27 @@ int PIN_FIRE_LED  = 5;
 int PIN_IR_INPUT  = 9;
 
 // Not used - just here for documentation. 
-// The IRremote library sets the output pin to 3 (for most boards)
+// The IRremote library sets the output pin to
+//  - Pin 3  for the Uno/Eleven
+//  - Pin 13 for the Leonardo/LeoStick
 // See IRremoteInt.h for TIMER_PWM_PIN.
-int PIN_IR_OUTPUT = 3;
+// int PIN_IR_OUTPUT = ;
 
 int HIT_STATUS_DURATION  = 100;
 int FIRE_STATUS_DURATION = 100;
 int TIME_BETWEEN_FIRE    = 2000;
 
+int IR_FREQ = 36000;
+
 unsigned long lastHit  = 0;
 unsigned long lastFire = 0;
 
 #ifdef FIRE_ENABLED
-  IRsend irSend;
+  IRMilesTagSend irSend;
 #endif
 
 #ifdef HIT_ENABLED
-  IRrecv irRecv(PIN_IR_INPUT);
+  IRMilesTagRecv irRecv(PIN_IR_INPUT);
   decode_results results;
 #endif
 
@@ -56,11 +60,10 @@ void loop() {
 
 void fire() {
   #ifdef FIRE_ENABLED
-    Serial.println("Sending 0xa90");
     showStatusLed(PIN_FIRE_LED, &lastFire);
-    for (int i = 0; i < 3; i ++) {
-      irSend.sendSony(0xa90, 12);
-    }
+
+    irSend.sendShot(9, 2, 88);
+    
     #ifdef HIT_ENABLED
       irRecv.enableIRIn();
     #endif

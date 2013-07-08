@@ -1,7 +1,7 @@
 #include <IRremote.h>
 #include <IRremoteInt.h>
-#include <IRMilesTagDefines.h>
 #include <IRMilesTag.h>
+#include <IRMilesTagDefines.h>
 
 #define FIRE_ENABLED
 #define HIT_ENABLED
@@ -9,6 +9,10 @@
 int PIN_HIT_LED   = 7;
 int PIN_FIRE_LED  = 5;
 int PIN_IR_INPUT  = 9;
+
+int myPlayer = 11;
+int myTeam   = 3;
+int myDamage = MT_DAMAGE_75;
 
 // Not used - just here for documentation. 
 // The IRremote library sets the output pin to
@@ -37,7 +41,9 @@ unsigned long lastFire = 0;
 
 void setup() {
   Serial.begin(9600);
-  Serial.println(TIMER_PWM_PIN);
+  
+  Serial.print("Timer PWM pin");
+  Serial.println(TIMER_PWM_PIN, DEC);
   
   #ifdef HIT_ENABLED
     irRecv.enableIRIn();
@@ -60,9 +66,16 @@ void loop() {
 
 void fire() {
   #ifdef FIRE_ENABLED
+  
+    Serial.print("Firing shot: Player ");
+    Serial.print(myPlayer, DEC);
+    Serial.print(", Team ");
+    Serial.print(myTeam, DEC);
+    Serial.print(", Damage ");
+    Serial.println(myDamage, DEC);
+  
     showStatusLed(PIN_FIRE_LED, &lastFire);
-
-    irSend.sendShot(9, 2, 88);
+    irSend.sendShot(myPlayer, myTeam, myDamage);
     
     #ifdef HIT_ENABLED
       irRecv.enableIRIn();
@@ -72,7 +85,16 @@ void fire() {
 
 void receiveIR() {
   #ifdef HIT_ENABLED
-    if (irRecv.decode(&results)) {
+    if (irRecv.recv(&results)) {
+      
+      Serial.print("Hit by: Player ");
+      Serial.print(MT_PLAYER_VALUE(results.value), DEC);
+      Serial.print(", Team ");
+      Serial.print(MT_TEAM_VALUE(results.value), DEC);
+      Serial.print(", Damage ");
+      Serial.println(MT_DAMAGE_VALUE(results.value), DEC);
+  
+      
       Serial.println(results.value, HEX);
       irRecv.resume();
       showStatusLed(PIN_HIT_LED, &lastHit);
